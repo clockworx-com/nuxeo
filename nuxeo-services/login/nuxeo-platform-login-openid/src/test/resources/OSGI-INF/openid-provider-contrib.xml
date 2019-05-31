@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<component name="org.nuxeo.ecm.platform.oauth2.openid.provider.test">
+
+  <extension target="org.nuxeo.ecm.platform.oauth2.openid.OpenIDConnectProviderRegistry" point="providers">
+
+      <provider>
+
+              <name>MY_NAME</name>
+
+              <label>MY_LABEL</label>
+
+              <description>MY_LABEL</description>
+
+              <clientId>MY_CLIENT_ID</clientId>
+
+              <clientSecret>MY_CLIENT_SECRET</clientSecret>
+
+              <authorizationServerURL>MY_AUTHORIZATION_SERVER_URL</authorizationServerURL>
+
+              <tokenServerURL>MY_TOKEN_SERVER_URL</tokenServerURL>
+
+              <userInfoURL>MY_USER_INFO_URL</userInfoURL>
+
+              <userInfoClass>org.nuxeo.ecm.platform.oauth2.openid.auth.DefaultOpenIDUserInfo</userInfoClass>
+
+              <userResolverClass>org.nuxeo.ecm.platform.oauth2.openid.auth.EmailBasedUserResolver</userResolverClass>
+              
+              <authenticationMethod>MY_AUTHENTICATION_METHOD</authenticationMethod>
+
+              <scope>MY_SCOPE</scope>
+
+      </provider>
+
+  </extension>
+
+</component>
