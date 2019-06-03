@@ -29,6 +29,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
 
+import org.nuxeo.ecm.core.api.CoreSession;
 import org.nuxeo.ecm.core.api.DocumentNotFoundException;
 import org.nuxeo.ecm.core.api.LifeCycleException;
 import org.nuxeo.ecm.core.api.Lock;
@@ -360,8 +361,74 @@ public class SQLDocumentLive extends BaseDocument<Node>implements SQLDocument {
     }
 
     /*
-     * ----- Retention -----
+     * ----- Retention and Hold -----
      */
+
+    @Override
+    public void makeRecord() {
+        setPropertyValue(Model.MAIN_IS_RECORD_PROP, Boolean.TRUE);
+    }
+
+    @Override
+    public boolean isRecord() {
+        return Boolean.TRUE.equals(getPropertyValue(Model.MAIN_IS_RECORD_PROP));
+    }
+
+    @Override
+    public void setRetentionUntil(Calendar retainUntil) {
+        Calendar current = (Calendar) getPropertyValue(Model.MAIN_RETAIN_UNTIL_PROP);
+        if (reducesRetention(current, retainUntil)) {
+            throw new PropertyException("Cannot reduce retention time");
+        }
+        setPropertyValue(Model.MAIN_RETAIN_UNTIL_PROP, retainUntil);
+        recomputeUndeletable();
+    }
+
+    protected boolean reducesRetention(Calendar current, Calendar retainUntil) {
+        if (current == null) {
+            return false;
+        }
+        if (current.equals(CoreSession.RETENTION_UNTIL_INDETERMINATE)) {
+            return false;
+        }
+        // cannot unset the retention or use a smaller value
+        return retainUntil == null || retainUntil.before(current);
+    }
+
+    @Override
+    public Calendar getRetentionUntil() {
+        return (Calendar) getPropertyValue(Model.MAIN_RETAIN_UNTIL_PROP);
+    }
+
+    @Override
+    public void setLegalHold(boolean hold) {
+        setPropertyValue(Model.MAIN_HAS_LEGAL_HOLD_PROP, hold ? Boolean.TRUE : null);
+        recomputeUndeletable();
+    }
+
+    @Override
+    public boolean hasLegalHold() {
+        return Boolean.TRUE.equals(getPropertyValue(Model.MAIN_HAS_LEGAL_HOLD_PROP));
+    }
+
+    protected void recomputeUndeletable() {
+        setPropertyValue(Model.MAIN_IS_UNDELETABLE_PROP, isUndeletable() ? Boolean.TRUE : null);
+    }
+
+    protected boolean isUndeletable() {
+        return hasLegalHold() || isUnderRetention(getRetentionUntil());
+    }
+
+    /**
+     * Checks if the given retention date is in the future.
+     *
+     * @param retainUntil the retention date, or {@code null}
+     * @return {@code true} if the date is not {@code null} and in the future
+     * @since 11.1
+     */
+    protected static boolean isUnderRetention(Calendar retainUntil) {
+        return Calendar.getInstance().before(retainUntil);
+    }
 
     @Override
     public void setRetentionActive(boolean retentionActive) {

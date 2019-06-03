@@ -485,6 +485,7 @@ public class SQLInfo {
         whatColumns.add(mainColumn);
         whatColumns.add(hierTable.getColumn(Model.HIER_PARENT_KEY));
         whatColumns.add(hierTable.getColumn(Model.MAIN_PRIMARY_TYPE_KEY));
+        whatColumns.add(hierTable.getColumn(Model.MAIN_IS_UNDELETABLE_KEY));
         whatColumns.add(hierTable.getColumn(Model.MAIN_IS_RETENTION_ACTIVE_KEY));
         Table proxyTable = null;
         if (proxiesEnabled) {
@@ -795,6 +796,7 @@ public class SQLInfo {
                 hierTable.getColumn(Model.HIER_PARENT_KEY), //
                 hierTable.getColumn(Model.MAIN_PRIMARY_TYPE_KEY), //
                 hierTable.getColumn(Model.HIER_CHILD_ISPROPERTY_KEY), //
+                hierTable.getColumn(Model.MAIN_IS_UNDELETABLE_KEY), //
                 hierTable.getColumn(Model.MAIN_IS_RETENTION_ACTIVE_KEY)));
         if (proxiesEnabled) {
             whatCols.add(proxyTable.getColumn(Model.PROXY_VERSIONABLE_KEY));

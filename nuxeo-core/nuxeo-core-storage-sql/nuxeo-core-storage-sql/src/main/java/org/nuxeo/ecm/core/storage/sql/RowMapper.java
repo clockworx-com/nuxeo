@@ -340,20 +340,20 @@ public interface RowMapper {
 
         public final Serializable targetId;
 
-        public final boolean isRetentionActive;
+        public final boolean isUndeletable;
 
         /**
          * Creates node info for a node that may also be a proxy.
          */
         public NodeInfo(Serializable id, Serializable parentId, String primaryType, Boolean isProperty,
-                Serializable versionSeriesId, Serializable targetId, boolean isRetentionActive) {
+                Serializable versionSeriesId, Serializable targetId, boolean isUndeletable) {
             this.id = id;
             this.parentId = parentId;
             this.primaryType = primaryType;
             this.isProperty = isProperty;
             this.versionSeriesId = versionSeriesId;
             this.targetId = targetId;
-            this.isRetentionActive = isRetentionActive;
+            this.isUndeletable = isUndeletable;
         }
 
         /**
@@ -374,7 +374,8 @@ public interface RowMapper {
                 versionSeriesId = ps;
                 targetId = proxyFragment.get(Model.PROXY_TARGET_KEY);
             }
-            isRetentionActive = TRUE.equals(hierFragment.get(Model.MAIN_IS_RETENTION_ACTIVE_KEY));
+            isUndeletable = TRUE.equals(hierFragment.get(Model.MAIN_IS_UNDELETABLE_KEY))
+                    || TRUE.equals(hierFragment.get(Model.MAIN_IS_RETENTION_ACTIVE_KEY));
         }
     }
 

@@ -21,8 +21,10 @@
 package org.nuxeo.ecm.core.model;
 
 import java.io.Serializable;
+import java.time.ZonedDateTime;
 import java.util.Calendar;
 import java.util.Collection;
+import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -30,6 +32,7 @@ import java.util.function.Consumer;
 
 import org.nuxeo.ecm.core.api.Blob;
 import org.nuxeo.ecm.core.api.DocumentNotFoundException;
+import org.nuxeo.ecm.core.api.DocumentRef;
 import org.nuxeo.ecm.core.api.LifeCycleException;
 import org.nuxeo.ecm.core.api.Lock;
 import org.nuxeo.ecm.core.api.PropertyException;
@@ -186,17 +189,98 @@ public interface Document {
     void remove();
 
     /**
+     * Turns the document into a record.
+     * <p>
+     * A record is a document with specific capabilities related to mandatory retention until a given date, and legal
+     * holds. In addition, its main blob receives special treatment from the document blob manager to make sure it's
+     * never shared with another blob at the storage level, and is deleted as soon as the record is deleted.
+     * <p>
+     * If the document is already a record, this method has no effect.
+     * <p>
+     * The permission {@value org.nuxeo.ecm.core.api.security.SecurityConstants#CAN_MAKE_RECORD} is required.
+     *
+     * @see #isRecord
+     * @since 11.1
+     */
+    void makeRecord();
+
+    /**
+     * Checks if the document is a record.
+     *
+     * @return {@code true} if the document is a record, {@code false} otherwise
+     * @see #makeRecord
+     * @since 11.1
+     */
+    boolean isRecord();
+
+    /**
+     * Sets a retention date to the given value.
+     * <p>
+     * If no previous retention date was set, or if the previous retention date was
+     * {@linkplain #RETENTION_UNTIL_INDETERMINATE indeterminate}, or if the previous retention date was <em>before</em> the
+     * given value, then the retention date is set to the given value.
+     * <p>
+     * If the previous retention date was <em>after</em> the given value (that is, if trying to reduce the retention
+     * time), an exception is thrown.
+     * <p>
+     * The permission {@value org.nuxeo.ecm.core.api.security.SecurityConstants#CAN_SET_RETENTION} is required.
+     *
+     * @param retainUntil the new retention date
+     * @throws PropertyException if trying to reduce the retention time, or if the document is not a record
+     * @see #getRetentionUntil
+     * @see #RETENTION_UNTIL_INDETERMINATE
+     * @since 11.1
+     */
+    void setRetentionUntil(Calendar retainUntil) throws PropertyException;
+
+    /**
+     * Gets the retention date for the document.
+     *
+     * @return the retention date, or {@value org.nuxeo.ecm.core.api.security.SecurityConstants#CAN_SET_RETENTION} for a
+     *         retention in the indeterminate future, or {@code null} if there is no retention date
+     * @see #setRetentionUntil
+     * @see #RETENTION_UNTIL_INDETERMINATE
+     * @since 11.1
+     */
+    Calendar getRetentionUntil();
+
+    /**
+     * Sets or removes a legal hold on a record.
+     * <p>
+     * The permission {@value org.nuxeo.ecm.core.api.security.SecurityConstants#CAN_MANAGE_LEGAL_HOLD} is required.
+     *
+     * @param hold {@code true} to set a legal hold, {@code false} to remove it
+     * @see #hasLegalHold
+     * @throws PropertyException if the document is not a record
+     * @since 11.1
+     */
+    void setLegalHold(boolean hold);
+
+    /**
+     * Checks if the document has a legal hold set.
+     *
+     * @return {@code true} if a legal hold has been set on the document, {@code false} otherwise
+     * @see #setLegalHold
+     * @since 11.1
+     */
+    boolean hasLegalHold();
+
+    /**
      * Checks whether this document is under active retention.
      *
      * @since 9.3
+     * @deprecated since 11.1, unused, use {@link #hasLegalHold} instead
      */
+    @Deprecated
     boolean isRetentionActive();
 
     /**
      * Sets or unsets this document as under active retention.
      *
      * @since 9.3
+     * @deprecated since 11.1, unused, use {@link #setLegalHold} instead
      */
+    @Deprecated
     void setRetentionActive(boolean retentionActive);
 
     /**

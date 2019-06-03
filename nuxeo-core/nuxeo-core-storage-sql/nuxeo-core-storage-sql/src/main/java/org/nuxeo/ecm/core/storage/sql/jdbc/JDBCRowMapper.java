@@ -1379,7 +1379,7 @@ public class JDBCRowMapper extends JDBCConnection implements RowMapper {
         Boolean isProperty = null;
         Serializable targetId = null;
         Serializable versionableId = null;
-        boolean isRetentionActive = false;
+        boolean isUndeletable = false;
         int i = 1;
         for (Column column : columns) {
             String key = column.getKey();
@@ -1396,14 +1396,16 @@ public class JDBCRowMapper extends JDBCConnection implements RowMapper {
                 targetId = value;
             } else if (key.equals(Model.PROXY_VERSIONABLE_KEY)) {
                 versionableId = value;
+            } else if (key.equals(Model.MAIN_IS_UNDELETABLE_KEY)) {
+                isUndeletable = isUndeletable || Boolean.TRUE.equals(value);
             } else if (key.equals(Model.MAIN_IS_RETENTION_ACTIVE_KEY)) {
-                isRetentionActive = Boolean.TRUE.equals(value);
+                isUndeletable = isUndeletable || Boolean.TRUE.equals(value);
             }
             // no mixins (not useful to caller)
             // no versions (not fileable)
         }
         NodeInfo nodeInfo = new NodeInfo(id, parentId, primaryType, isProperty, versionableId, targetId,
-                isRetentionActive);
+                isUndeletable);
         return nodeInfo;
     }
 

@@ -4431,6 +4431,118 @@ public class TestSQLRepositoryAPI {
     }
 
     @Test
+    public void testRecord() {
+        DocumentModel doc = session.createDocumentModel("/", "doc", "File");
+        doc = session.createDocument(doc);
+        DocumentRef docRef = doc.getRef();
+
+        assertFalse(session.isRecord(docRef));
+        session.makeRecord(docRef);
+        assertTrue(session.isRecord(docRef));
+    }
+
+    @Test
+    public void testRetentionUntil() {
+        DocumentModel folder = session.createDocumentModel("/", "fold", "Folder");
+        folder = session.createDocument(folder);
+        DocumentModel subFolder = session.createDocumentModel("/fold", "subfold", "Folder");
+        session.createDocument(subFolder);
+        DocumentModel doc = session.createDocumentModel("/fold/subfold", "doc", "File");
+        doc = session.createDocument(doc);
+
+        // must be a record
+        try {
+            session.setRetentionUntil(doc.getRef(), null);
+            fail("Should fail because document is not a record");
+        } catch (PropertyException e) {
+            assertEquals("Document is not a record", e.getMessage());
+        }
+
+        // make it a record
+        session.makeRecord(doc.getRef());
+
+        // first, set inderminate retention
+        assertNull(session.getRetentionUntil(doc.getRef()));
+        session.setRetentionUntil(doc.getRef(), CoreSession.RETENTION_UNTIL_INDETERMINATE);
+        assertEquals(CoreSession.RETENTION_UNTIL_INDETERMINATE, session.getRetentionUntil(doc.getRef()));
+
+        checkUndeletable(folder, doc);
+
+        // then reduce retention to an actual date in the future
+        Calendar retainUntil = Calendar.getInstance();
+        retainUntil.add(Calendar.HOUR, 1);
+        session.setRetentionUntil(doc.getRef(), retainUntil);
+        assertEquals(retainUntil, session.getRetentionUntil(doc.getRef()));
+
+        checkUndeletable(folder, doc);
+
+        // cannot reduce retention
+        Calendar retainUntilEarlier = Calendar.getInstance();
+        retainUntilEarlier.add(Calendar.MINUTE, 5);
+        try {
+            session.setRetentionUntil(doc.getRef(), retainUntilEarlier);
+            fail("Should fail because cannot reduce retention time");
+        } catch (PropertyException e) {
+            assertEquals("Cannot reduce retention time", e.getMessage());
+        }
+    }
+
+    @Test
+    public void testLegalHold() {
+        DocumentModel folder = session.createDocumentModel("/", "fold", "Folder");
+        folder = session.createDocument(folder);
+        DocumentModel subFolder = session.createDocumentModel("/fold", "subfold", "Folder");
+        session.createDocument(subFolder);
+        DocumentModel doc = session.createDocumentModel("/fold/subfold", "doc", "File");
+        doc = session.createDocument(doc);
+
+        // must be a record
+        try {
+            session.setRetentionUntil(doc.getRef(), null);
+            fail("Should fail because document is not a record");
+        } catch (PropertyException e) {
+            assertEquals("Document is not a record", e.getMessage());
+        }
+
+        // make it a record
+        session.makeRecord(doc.getRef());
+
+        // set legal hold
+        assertFalse(session.hasLegalHold(doc.getRef()));
+        session.setLegalHold(doc.getRef(), true);
+        assertTrue(session.hasLegalHold(doc.getRef()));
+
+        checkUndeletable(folder, doc);
+
+        // unset legal hold, can now delete
+        session.setLegalHold(doc.getRef(), false);
+        session.removeDocument(doc.getRef());
+    }
+
+    protected void checkUndeletable(DocumentModel folder, DocumentModel doc) {
+        // check that the document cannot be deleted now, even by system user
+        assertTrue(session.getPrincipal().isAdministrator());
+        try {
+            session.removeDocument(doc.getRef());
+            fail("remove should fail");
+        } catch (DocumentExistsException e) {
+            assertEquals("Cannot remove " + doc.getId() + ", it is under retention / hold", e.getMessage());
+        }
+
+        // check that the document cannot be deleted through a parent
+        assertTrue(session.getPrincipal().isAdministrator());
+        try {
+            session.removeDocument(folder.getRef());
+            fail("remove should fail");
+        } catch (DocumentExistsException e) {
+            assertEquals(
+                    "Cannot remove " + folder.getId() + ", subdocument " + doc.getId() + " is under retention / hold",
+                    e.getMessage());
+        }
+    }
+
+    @SuppressWarnings("deprecation")
+    @Test
     public void testRetentionActive() {
         DocumentModel folder = session.createDocumentModel("/", "fold", "Folder");
         folder = session.createDocument(folder);
@@ -4444,25 +4556,7 @@ public class TestSQLRepositoryAPI {
         session.setRetentionActive(docRef, true);
         assertTrue(session.isRetentionActive(docRef));
 
-        // check that the document cannot be deleted now, even by system user
-        assertTrue(session.getPrincipal().isAdministrator());
-        try {
-            session.removeDocument(docRef);
-            fail("remove should fail");
-        } catch (DocumentExistsException e) {
-            assertEquals("Cannot remove " + doc.getId() + ", it is under active retention", e.getMessage());
-        }
-
-        // check that the document cannot be deleted through a parent
-        assertTrue(session.getPrincipal().isAdministrator());
-        try {
-            session.removeDocument(folder.getRef());
-            fail("remove should fail");
-        } catch (DocumentExistsException e) {
-            assertEquals(
-                    "Cannot remove " + folder.getId() + ", subdocument " + doc.getId() + " is under active retention",
-                    e.getMessage());
-        }
+        checkUndeletable(folder, doc);
     }
 
     @Test
