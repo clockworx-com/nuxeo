@@ -86,11 +86,16 @@ public class XMLSerializer implements Serializer {
         Boolean isReadonly = getIsReadonlyFromXMLNode(node);
         Boolean isAutoloop = getIsAutoloopFromXMLNode(node);
 
-        Object paramValue = node.attributeValue("value");
+
+        Object paramValue = getValueFromXMLNode(node);
+
         switch (paramType) {
+            // no string processing required
+            case HTMLValue:
             case StringValue:
             case BooleanValue:
                 break;
+            // format string as Date
             case DateValue:
                 try {
                     SimpleDateFormat dateFormat = new SimpleDateFormat(DATE_FORMAT);
@@ -99,6 +104,7 @@ public class XMLSerializer implements Serializer {
                     throw new DocumentException(e);
                 }
                 break;
+            // generate list with children
             case MapValue:
             case ListValue:
                 Map<String, TemplateInput> listValue = new LinkedHashMap<>();
@@ -114,6 +120,15 @@ public class XMLSerializer implements Serializer {
                 paramValue = node.attributeValue("source");
         }
         return TemplateInput.factory(paramName, paramType, paramValue, paramDesc, isReadonly, isAutoloop);
+    }
+
+    private Object getValueFromXMLNode(Element node) {
+        for (Attribute attribute : node.attributes()) {
+            if ("value".equals(attribute.getName())) {
+                return attribute.getValue();
+            }
+        }
+        return node.getTextTrim();
     }
 
 
@@ -190,6 +205,9 @@ public class XMLSerializer implements Serializer {
         }
 
         switch (type) {
+            case HTMLValue:
+                field.addCDATA(param.getStringValue());
+                break;
             case StringValue:
                 field.addAttribute("value", param.getStringValue());
                 break;

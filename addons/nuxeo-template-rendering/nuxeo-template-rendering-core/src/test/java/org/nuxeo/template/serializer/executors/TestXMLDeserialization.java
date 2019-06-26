@@ -83,6 +83,31 @@ public class TestXMLDeserialization {
         assertEquals("Value1", result.get(0).getStringValue());
     }
 
+    @Test
+    public void whenDescribeOneHTML_AsAttribute_shouldReturnAListWithOneHTML() throws DocumentException {
+        String XMLContent = "<dt:field name=\"field1\" type=\"html\" value=\"Hello &lt;b&gt;world&lt;/b&gt; !\"/>";
+
+        List<TemplateInput> result = serializer.doDeserialization(addRootXMLEntity(XMLContent));
+
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        assertEquals("field1", result.get(0).getName());
+        assertEquals(InputType.HTMLValue, result.get(0).getType());
+        assertEquals("Hello <b>world</b> !", result.get(0).getStringValue());
+    }
+
+    @Test
+    public void whenDescribeOneHTML_asChild_shouldReturnAListWithOneHTML() throws DocumentException {
+        String XMLContent = "<dt:field name=\"field1\" type=\"html\"><![CDATA[Hello <b>world</b> !]]></dt:field>";
+
+        List<TemplateInput> result = serializer.doDeserialization(addRootXMLEntity(XMLContent));
+
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        assertEquals("field1", result.get(0).getName());
+        assertEquals(InputType.HTMLValue, result.get(0).getType());
+        assertEquals("Hello <b>world</b> !", result.get(0).getStringValue());
+    }
 
     @Test
     public void whenDescribeOneDate_shouldReturnAListWithOneDate() throws DocumentException {

@@ -279,6 +279,7 @@ public class TemplateInput implements Serializable {
         param.setAutoLoop(isAutoloop == null ? false : isAutoloop);
         param.setDesciption(description);
         switch (type) {
+            case HTMLValue:
             case StringValue:
                 param.setStringValue(value);
                 break;
