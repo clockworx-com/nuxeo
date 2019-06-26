@@ -25,6 +25,7 @@ import static org.nuxeo.template.api.InputType.BooleanValue;
 import static org.nuxeo.template.api.InputType.Content;
 import static org.nuxeo.template.api.InputType.DateValue;
 import static org.nuxeo.template.api.InputType.DocumentProperty;
+import static org.nuxeo.template.api.InputType.HTMLValue;
 import static org.nuxeo.template.api.InputType.ListValue;
 import static org.nuxeo.template.api.InputType.MapValue;
 import static org.nuxeo.template.api.InputType.PictureProperty;
@@ -83,6 +84,16 @@ public class TestXMLSerialization {
         String xml = serializer.doSerialization(params);
 
         assertXMLEquals("<nxdt:field name=\"field1\" type=\"String\" value=\"Value1\"/>", xml);
+    }
+
+    @Test
+    public void whenValueHasOneHTML_shouldReturnListWithOneHTML() {
+        List<TemplateInput> params = new ArrayList<>();
+        params.add(TemplateInput.factory("field1", HTMLValue, "Hello <b>world</b> !"));
+
+        String xml = serializer.doSerialization(params);
+
+        assertXMLEquals("<nxdt:field name=\"field1\" type=\"html\"><![CDATA[Hello <b>world</b> !]]></nxdt:field>", xml);
     }
 
     @Test
