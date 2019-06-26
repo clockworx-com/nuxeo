@@ -100,6 +100,8 @@ public abstract class AbstractBindingResolver implements InputBindingResolver {
                 return param.getBooleanValue();
             case DateValue:
                 return param.getDateValue();
+            case HTMLValue:
+                return handleHtmlField(param.getName(), param.getStringValue());
             case StringValue:
                 return param.getStringValue();
             case MapValue:

@@ -39,7 +39,8 @@ public enum InputType {
     ListValue(List.class.getSimpleName()),
     DocumentProperty("source"),
     PictureProperty("picture"),
-    Content("content");
+    Content("content"),
+    HTMLValue("html");
 
     private final String value;
 
