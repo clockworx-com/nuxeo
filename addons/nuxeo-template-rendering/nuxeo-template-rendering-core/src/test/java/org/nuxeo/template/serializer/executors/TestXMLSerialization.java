@@ -93,7 +93,7 @@ public class TestXMLSerialization {
 
         String xml = serializer.doSerialization(params);
 
-        assertXMLEquals("<nxdt:field name=\"field1\" type=\"html\"><![CDATA[Hello <b>world</b> !]]></nxdt:field>", xml);
+        assertXMLEquals("<nxdt:field name=\"field1\" type=\"html\" value=\"Hello &lt;b&gt;world&lt;/b&gt; !\"/>", xml);
     }
 
     @Test
