@@ -201,7 +201,7 @@ public class XMLSerializer implements Serializer {
 
         switch (type) {
             case HTMLValue:
-                field.addCDATA(param.getStringValue());
+                field.addAttribute("value", param.getStringValue());
                 break;
             case StringValue:
                 field.addAttribute("value", param.getStringValue());
